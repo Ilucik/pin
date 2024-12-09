@@ -1,0 +1,41 @@
+.stat {
+    display: inline-block;
+    border: 1px solid #cdcdcd;
+    padding: 10px 20px;
+    margin: 0 5px;
+    border-radius: 20px;
+}
+
+.pin-layout {
+    margin: 10px 0px;
+}
+
+.item {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    transition: .5s ease;
+    background-color: rgba(17,17,17,0.4);
+}
+
+.item:hover {
+    opacity: 1;
+}
+
+
+
+.item-img {
+    margin: 10px 0px;
+    overflow: hidden;
+    border-radius: 20px;
+    position: relative;
+}
+
+.item-img:first-child {
+    margin-top: 0px;
+}

@@ -1,0 +1,151 @@
+﻿@page "/"
+@using System.Diagnostics;
+<section tooltip>
+    <div>
+        <select class="stat" @onchange="ChangeDirectory">
+
+            <option value=""></option>
+            @foreach (var d in directories)
+            {
+                <option value="@d"> @d </option>
+            }
+
+        </select>
+        <div class="stat">@load</div>
+        <div class="stat">кол-во: @source.Count</div>
+
+        @if (!stopWatch.IsRunning)
+        {
+            <div class="stat">время: @stopWatch.Elapsed.TotalSeconds</div>
+        }
+        <button class="stat" @onclick="Reload"><img src="/reload.png"alt="reload"style="height:1rem"/></button>
+    </div>
+</section>
+<section columns>
+    <div class="columns-count">
+        <button class="stat" @onclick="ColumnNuberIncrease">+</button>
+        <button class="stat" @onclick="ColumnNumberDecrease">-</button>
+    </div>
+</section>
+<ImageModal @ref="imageModal"/>
+
+@* @if (source.Count > 0)
+{
+    <div class="pin-layout" style="columns:@columnCount">
+        @for (var i = 0; i < source.Count; i++)
+        {
+            var ci = i;
+            <div @onclick="()=>ShowModal(ci)" class="item-img">
+                <img src="data:image/png;base64, @source[i]" width="100%"  />
+                <div class="item">
+                </div>
+            </div>
+        }
+
+    </div>
+} *@
+
+@if (source.Count > 0)
+{
+    <div class="pin-layout" >
+        @for (var i = 0; i < source.Count; i++)
+        {
+            var ci = i;
+            <div @onclick="()=>ShowModal(ci)" class="item-img">
+                <img src="data:image/png;base64, @source[i]" width="100%" />
+                <div class="item">
+                </div>
+            </div>
+        }
+
+    </div>
+}
+
+
+@code {
+    private ImageModal imageModal;
+    private List<string> source= new();
+    private const string HomeDirecory = @"C:/Users/sany1/Desktop/test";
+    private string currentDirectory = "";
+    private IEnumerable<String> directories;
+    private bool load;
+    private bool modalVisible;
+    private Stopwatch stopWatch = new();
+    private int columnCount = 5;
+    int cursor;
+    protected override async Task OnInitializedAsync()
+    {
+        directories = LoadDirectories();
+        await base.OnInitializedAsync();       
+    }
+    private IEnumerable<String> LoadDirectories()
+    {
+        return (new DirectoryInfo(HomeDirecory))
+        .GetDirectories()
+        .Select(e=>e.Name);
+    }
+
+    private async Task LoadImages(string path)
+    {
+        source = new();
+        load = false;
+        stopWatch.Restart();
+        var files = Directory.GetFiles(path);
+        //var files = Directory.GetFiles(@"C:/rnd","*.jpg");
+        for (var i = 0; i < files.Length; i++)
+        {
+            var img = await File.ReadAllBytesAsync(files[i]);
+            var imageSource = Convert.ToBase64String(img);
+            //imageSource = string.Format("data:image/png;base64, {0}", imageSource);
+            source.Add(imageSource);
+            //StateHasChanged();
+        }
+
+        load = true;
+        stopWatch.Stop();
+        StateHasChanged();
+    }
+
+    private void CursorNext()
+    {
+        cursor++;
+        if (cursor < 0 || cursor >= source.Count)
+            cursor = 0;
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private void ShowModal(int index)
+    {
+        // cursor = index;
+        modalVisible = true;
+        imageModal.ShowModal(source, index);
+    }
+
+    private async void ChangeDirectory(ChangeEventArgs e)
+    {
+        currentDirectory = e.Value?.ToString();
+        await LoadImages(Path.Combine(HomeDirecory, currentDirectory));
+    }
+
+    private async void Reload()
+    {
+        await LoadImages(Path.Combine(HomeDirecory, currentDirectory));
+    }
+
+    private void ColumnNuberIncrease()
+    {
+        if (columnCount < 6)
+            columnCount++;
+        StateHasChanged();
+    }
+    private void ColumnNumberDecrease()
+    {
+        if (columnCount > 0)
+            columnCount--;
+        StateHasChanged();
+    }
+}

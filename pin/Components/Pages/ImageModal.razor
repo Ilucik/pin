@@ -1,0 +1,36 @@
+﻿@if (visible)
+{
+    <div @onclick="HideModal" class="modal-container">
+        <div @onclick="CursorNext" @onclick:stopPropagation="true" class="pin-modal">
+            <img src="data:image/png;base64, @source[cursor]" />
+            <div class="modal-bottom"></div>
+        </div>
+    </div>
+}
+
+
+@code {
+    private bool visible;
+    public List<string> source{ get;  set; }
+    public int cursor { get;  set; }
+
+    private void HideModal()
+    {
+        visible = false;
+    }
+
+    private void CursorNext()
+    {
+        cursor++;
+        if (cursor < 0 || cursor >= source.Count)
+            cursor = 0;
+    }
+
+    public void ShowModal(List<string> source, int index)
+    {
+        this.source = source;
+        cursor = index;
+        visible = true;
+        StateHasChanged();
+    }
+}
