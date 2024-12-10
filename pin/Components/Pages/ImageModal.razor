@@ -1,8 +1,9 @@
-﻿@if (visible)
+﻿@using pin.Infrastructure
+@if (visible)
 {
     <div @onclick="HideModal" class="modal-container">
         <div @onclick="CursorNext" @onclick:stopPropagation="true" class="pin-modal">
-            <img src="data:image/png;base64, @source[cursor]" />
+            <img src="data:image/png;base64, @source[cursor].src64" />
             <div class="modal-bottom"></div>
         </div>
     </div>
@@ -11,7 +12,7 @@
 
 @code {
     private bool visible;
-    public List<string> source{ get;  set; }
+    public List<PinElement> source { get; set; }
     public int cursor { get;  set; }
 
     private void HideModal()
@@ -26,7 +27,7 @@
             cursor = 0;
     }
 
-    public void ShowModal(List<string> source, int index)
+    public void ShowModal(List<PinElement> source, int index)
     {
         this.source = source;
         cursor = index;

@@ -8,6 +8,15 @@
 
 .pin-layout {
     margin: 10px 0px;
+    position: relative;
+}
+
+.item-img {
+    margin: 10px 0px;
+    overflow: hidden;
+    border-radius: 20px;
+    position: absolute;
+    display:inline-block;
 }
 
 .item {
@@ -25,15 +34,6 @@
 
 .item:hover {
     opacity: 1;
-}
-
-
-
-.item-img {
-    margin: 10px 0px;
-    overflow: hidden;
-    border-radius: 20px;
-    position: relative;
 }
 
 .item-img:first-child {

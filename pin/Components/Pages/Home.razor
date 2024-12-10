@@ -1,5 +1,9 @@
 ﻿@page "/"
 @using System.Diagnostics;
+@using Microsoft.Maui.Graphics.Platform
+@using pin.Infrastructure
+@inject IJSRuntime JsRuntime
+
 <section tooltip>
     <div>
         <select class="stat" @onchange="ChangeDirectory">
@@ -47,12 +51,14 @@
 
 @if (source.Count > 0)
 {
+    
     <div class="pin-layout" >
         @for (var i = 0; i < source.Count; i++)
         {
             var ci = i;
-            <div @onclick="()=>ShowModal(ci)" class="item-img">
-                <img src="data:image/png;base64, @source[i]" width="100%" />
+            var a = columnPercent * (ci % columnCount);
+            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{columnPercent}%"); top:@($"{source[ci].top}px");left:@($"{source[ci].left}%")">
+                <img src="data:image/png;base64, @source[ci].src64" width="100%" />
                 <div class="item">
                 </div>
             </div>
@@ -63,19 +69,28 @@
 
 
 @code {
+    private IJSObjectReference jsModule;
     private ImageModal imageModal;
-    private List<string> source= new();
+    private List<PinElement> source = new();
     private const string HomeDirecory = @"C:/Users/sany1/Desktop/test";
-    private string currentDirectory = "";
+    private string currentDirectory = "123";
     private IEnumerable<String> directories;
     private bool load;
     private bool modalVisible;
     private Stopwatch stopWatch = new();
     private int columnCount = 5;
+    private int columnPercent => 100 / columnCount;
+    private float maxWidth;
+    private float[] layout;
     int cursor;
     protected override async Task OnInitializedAsync()
     {
         directories = LoadDirectories();
+        if (jsModule is null)
+            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getwindowsize.js");
+        var winSize = await jsModule.InvokeAsync<WindowDimensions>("getWindowSize");
+        maxWidth = winSize.Width / columnCount;
+        await Reload();
         await base.OnInitializedAsync();       
     }
     private IEnumerable<String> LoadDirectories()
@@ -88,17 +103,31 @@
     private async Task LoadImages(string path)
     {
         source = new();
+        layout = new float[columnCount];
         load = false;
         stopWatch.Restart();
         var files = Directory.GetFiles(path);
         //var files = Directory.GetFiles(@"C:/rnd","*.jpg");
         for (var i = 0; i < files.Length; i++)
-        {
+        {                    
             var img = await File.ReadAllBytesAsync(files[i]);
+            float targetHeight;
+            using (var ms = new MemoryStream(img))
+            {
+                var image  = PlatformImage.FromStream(ms);
+                targetHeight = image.Height * maxWidth / image.Width;
+            }
+            var pl = IndexOfMin(layout);
+            var left = columnPercent * pl;
+            var top = Convert.ToInt32(layout[pl]);
+            layout[pl] += targetHeight;
             var imageSource = Convert.ToBase64String(img);
-            //imageSource = string.Format("data:image/png;base64, {0}", imageSource);
-            source.Add(imageSource);
-            //StateHasChanged();
+            source.Add(new PinElement()
+                {
+                    left = left,
+                    top = top,
+                    src64 = imageSource
+                });
         }
 
         load = true;
@@ -131,7 +160,7 @@
         await LoadImages(Path.Combine(HomeDirecory, currentDirectory));
     }
 
-    private async void Reload()
+    private async Task Reload()
     {
         await LoadImages(Path.Combine(HomeDirecory, currentDirectory));
     }
@@ -142,10 +171,33 @@
             columnCount++;
         StateHasChanged();
     }
+
     private void ColumnNumberDecrease()
     {
         if (columnCount > 0)
             columnCount--;
         StateHasChanged();
+    }
+
+    private int IndexOfMin(float[] src)
+    {
+        var min = float.MaxValue;
+        var ind = -1;
+        for(var i = 0;i< src.Length; i++)
+        {
+            if(src[i] < min)
+            {
+                min = src[i];
+                ind = i;
+            }
+        }
+
+        return ind;
+    }
+
+    public class WindowDimensions
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }
