@@ -87,8 +87,8 @@
     {
         directories = LoadDirectories();
         if (jsModule is null)
-            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getwindowsize.js");
-        var winSize = await jsModule.InvokeAsync<WindowDimensions>("getWindowSize");
+            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
+        var winSize = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
         maxWidth = winSize.Width / columnCount;
         await Reload();
         await base.OnInitializedAsync();       
@@ -207,6 +207,5 @@
     public class WindowDimensions
     {
         public int Width { get; set; }
-        public int Height { get; set; }
     }
 }

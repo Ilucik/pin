@@ -12,7 +12,7 @@
 }
 
 .item-img {
-    margin: 10px 0px;
+    /*margin: 10px 0px;*/
     overflow: hidden;
     border-radius: 20px;
     position: absolute;
@@ -34,8 +34,4 @@
 
 .item:hover {
     opacity: 1;
-}
-
-.item-img:first-child {
-    margin-top: 0px;
 }
