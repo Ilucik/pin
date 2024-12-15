@@ -52,7 +52,7 @@
 @if (source.Count > 0)
 {
     
-    <div class="pin-layout" >
+    <div class="pin-layout" style="height:@($"{MaxElement(layout)}px")" >
         @for (var i = 0; i < source.Count; i++)
         {
             var ci = i;
@@ -177,6 +177,15 @@
         if (columnCount > 0)
             columnCount--;
         StateHasChanged();
+    }
+
+    private float MaxElement(float[] src)
+    {
+        var max = float.MinValue;
+        foreach(var e in src)
+            if(e > max)
+                max = e;
+        return max;
     }
 
     private int IndexOfMin(float[] src)
