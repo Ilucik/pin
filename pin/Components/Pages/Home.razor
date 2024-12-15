@@ -33,22 +33,6 @@
 </section>
 <ImageModal @ref="imageModal"/>
 
-@* @if (source.Count > 0)
-{
-    <div class="pin-layout" style="columns:@columnCount">
-        @for (var i = 0; i < source.Count; i++)
-        {
-            var ci = i;
-            <div @onclick="()=>ShowModal(ci)" class="item-img">
-                <img src="data:image/png;base64, @source[i]" width="100%"  />
-                <div class="item">
-                </div>
-            </div>
-        }
-
-    </div>
-} *@
-
 @if (source.Count > 0)
 {
     
@@ -57,7 +41,7 @@
         {
             var ci = i;
             var a = columnPercent * (ci % columnCount);
-            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{columnPercent}%"); top:@($"{source[ci].top}px");left:@($"{source[ci].left}%")">
+            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].top}px");left:@($"{source[ci].left}px")">
                 <img src="data:image/png;base64, @source[ci].src64" width="100%" />
                 <div class="item">
                 </div>
@@ -78,9 +62,11 @@
     private bool load;
     private bool modalVisible;
     private Stopwatch stopWatch = new();
-    private int columnCount = 5;
+    private int columnCount = 4;
     private int columnPercent => 100 / columnCount;
     private float maxWidth;
+    private float verticalItemMargin = 10;
+    private float horizontalItemMargin = 20;
     private float[] layout;
     int cursor;
     protected override async Task OnInitializedAsync()
@@ -89,7 +75,7 @@
         if (jsModule is null)
             jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
         var winSize = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
-        maxWidth = winSize.Width / columnCount;
+        maxWidth = (winSize.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
         await Reload();
         await base.OnInitializedAsync();       
     }
@@ -118,9 +104,9 @@
                 targetHeight = image.Height * maxWidth / image.Width;
             }
             var pl = IndexOfMin(layout);
-            var left = columnPercent * pl;
-            var top = Convert.ToInt32(layout[pl]);
-            layout[pl] += targetHeight;
+            var left = (maxWidth + horizontalItemMargin) * pl;
+            var top = layout[pl];
+            layout[pl] += targetHeight + verticalItemMargin;
             var imageSource = Convert.ToBase64String(img);
             source.Add(new PinElement()
                 {
