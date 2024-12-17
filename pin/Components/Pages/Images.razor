@@ -1,0 +1,211 @@
+﻿@using System.Diagnostics;
+@using Microsoft.Maui.Graphics.Platform
+@using System.ComponentModel.DataAnnotations
+@using pin.Infrastructure
+@inject IJSRuntime JsRuntime
+
+<section tooltip>
+    <div>
+        @if(directories is not null){
+            <select class="stat" @onchange ="ChangeDirectory">
+
+                <option value=""></option>
+                @foreach (var d in directories)
+                {
+                    <option value="@d"> @d </option>
+                }
+
+            </select>
+        }
+        @* <div class="stat">@load</div> *@
+        <div class="stat">кол-во: @source.Count</div>
+
+        @if (!stopWatch.IsRunning)
+        {
+            <div class="stat">время: @stopWatch.Elapsed.TotalSeconds</div>
+        }
+        <button class="stat" @onclick="Reload"><img src="/reload.png"alt="reload"style="height:1rem"/></button>
+    </div>
+</section>
+<section columns>
+    <div class="columns-count">
+        <button class="stat" @onclick="ColumnNuberIncrease">+</button>
+        <button class="stat" @onclick="ColumnNumberDecrease">-</button>
+    </div>
+</section>
+<ImageModal @ref="imageModal"/>
+
+@if(!load){
+    <div class="loader-container">
+        <div class="loader"></div>
+    </div>
+}
+
+@if (source.Count > 0)
+{
+    
+    <div class="pin-layout" style="height:@($"{MaxElement(layout)}px")" >
+        @for (var i = 0; i < source.Count; i++)
+        {
+            var ci = i;
+            var a = columnPercent * (ci % columnCount);
+            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].top}px");left:@($"{source[ci].left}px")">
+                <img src="data:image/png;base64, @source[ci].src64" width="100%" />
+                <div class="item">
+                </div>
+            </div>
+        }
+
+    </div>
+}
+
+
+@code {
+    private IJSObjectReference jsModule;
+    private ImageModal imageModal;
+    private List<PinElement> source = new();
+    [Parameter]
+    [Required]
+    public string homeDirecory { get; set; }
+    private string currentDirectory = "123";
+    [Parameter]
+    [Required]
+    public IEnumerable<String> directories { get; set; }
+    private bool load = true;
+    private bool modalVisible;
+    private Stopwatch stopWatch = new();
+    private int columnCount = 5;
+    private int columnPercent => 100 / columnCount;
+    private int maxWidth;
+    private int verticalItemMargin = 10;
+    private int horizontalItemMargin = 20;
+    private int[] layout;
+    int cursor;
+    protected override async Task OnInitializedAsync()
+    {      
+        if (jsModule is null)
+            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
+        var winSize = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
+        maxWidth = (winSize.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
+
+        // await Reload();
+
+        await base.OnInitializedAsync();       
+    }
+
+    private IEnumerable<String> LoadDirectories()
+    {
+        return (new DirectoryInfo(homeDirecory))
+        .GetDirectories()
+        .Select(e=>e.Name);
+    }
+
+    private async Task LoadImages(string path)
+    {
+        source = new();
+        layout = new int[columnCount];
+        load = false;
+        stopWatch.Restart();
+        var files = Directory.GetFiles(path);
+        //var files = Directory.GetFiles(path,"*.jpg");
+        for (var i = 0; i < files.Length; i++)
+        {                    
+            var img = await File.ReadAllBytesAsync(files[i]);
+            int targetHeight;
+            using (var ms = new MemoryStream(img))
+            {
+                var image  = PlatformImage.FromStream(ms);
+                targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);
+            }
+            var pl = IndexOfMin(layout);
+            var left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
+            var top = Convert.ToInt32(layout[pl]);
+            layout[pl] += targetHeight + verticalItemMargin;
+            var imageSource = Convert.ToBase64String(img);
+            source.Add(new PinElement()
+                {
+                    left = left,
+                    top = top,
+                    src64 = imageSource
+                });
+        }
+
+        load = true;
+        stopWatch.Stop();
+        StateHasChanged();
+    }
+
+    private void CursorNext()
+    {
+        cursor++;
+        if (cursor < 0 || cursor >= source.Count)
+            cursor = 0;
+    }
+
+    private void HideModal()
+    {
+        modalVisible = false;
+    }
+
+    private void ShowModal(int index)
+    {
+        // cursor = index;
+        modalVisible = true;
+        imageModal.ShowModal(source, index);
+    }
+
+    private async void ChangeDirectory(ChangeEventArgs e)
+    {
+        currentDirectory = e.Value?.ToString();
+        await LoadImages(Path.Combine(homeDirecory, currentDirectory));
+    }
+
+    private async Task Reload()
+    {
+        await LoadImages(Path.Combine(homeDirecory, currentDirectory));
+    }
+
+    private void ColumnNuberIncrease()
+    {
+        if (columnCount < 6)
+            columnCount++;
+        StateHasChanged();
+    }
+
+    private void ColumnNumberDecrease()
+    {
+        if (columnCount > 0)
+            columnCount--;
+        StateHasChanged();
+    }
+
+    private float MaxElement(int[] src)
+    {
+        var max = int.MinValue;
+        foreach(var e in src)
+            if(e > max)
+                max = e;
+        return max;
+    }
+
+    private int IndexOfMin(int[] src)
+    {
+        var min = int.MaxValue;
+        var ind = -1;
+        for(var i = 0;i< src.Length; i++)
+        {
+            if(src[i] < min)
+            {
+                min = src[i];
+                ind = i;
+            }
+        }
+
+        return ind;
+    }
+
+    public class WindowDimensions
+    {
+        public int Width { get; set; }
+    }
+}

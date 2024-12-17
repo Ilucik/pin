@@ -1,0 +1,15 @@
+﻿@using System.ComponentModel.DataAnnotations
+<input @bind-value=@path />
+<button @onclick="Submit">submit</button>
+
+@code {
+    private string path = "C:/";
+    [Parameter]
+    [Required]
+    public EventCallback<string> OnClickCallback { get; set; }
+
+    private void Submit()
+    {
+        OnClickCallback.InvokeAsync(path);
+    }
+}

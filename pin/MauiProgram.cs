@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.LifecycleEvents;
+using pin.Infrastructure;
 using System.Reflection;
 
 namespace pin
@@ -35,17 +38,14 @@ namespace pin
             });  
         });
 #endif
-            using var appsettingsStream = Assembly
-            .GetExecutingAssembly()
-            .GetManifestResourceStream("pin.wwwroot.appsettings.json");
-            if (appsettingsStream != null)
-            {
-                var config = new ConfigurationBuilder()
-                    .AddJsonStream(appsettingsStream)
-                    .Build();
-
-                builder.Configuration.AddConfiguration(config);
-            }
+            var a = Directory.GetCurrentDirectory();
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"))
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                //.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .Build();
+            builder.Configuration.AddConfiguration(config);
+            builder.Services.ConfigureWritable<UserOptions>();
 
             builder.Services.AddMauiBlazorWebView();
 

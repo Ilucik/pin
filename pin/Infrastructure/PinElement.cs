@@ -3,7 +3,7 @@
     public class PinElement
     {
         public string src64;
-        public float top;
-        public float left;
+        public int top;
+        public int left;
     }
 }
