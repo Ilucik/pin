@@ -38,7 +38,12 @@ namespace pin
             });  
         });
 #endif
-            var a = Directory.GetCurrentDirectory();
+            //var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            //var appPath = Path.Combine(appDataPath, "pin");
+            //var wwwrootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
+            //var fi = new FileInfo(wwwrootPath);
+            //fi.CopyTo(appPath);
+
             var config = new ConfigurationBuilder()
                 .SetBasePath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"))
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
