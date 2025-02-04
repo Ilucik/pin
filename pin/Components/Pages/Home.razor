@@ -9,16 +9,17 @@
 }
 @if (directories is not null)
 {
-    <Images homeDirecory="@homeDirecory" directories="@directories"/>
+    <Images homeDirecory="@homeDirecory.HomeDirectory" directories="@directories" currentDirectory="@homeDirecory.HomeSubdirectory"/>
 }
 
 @code {
-    private string homeDirecory;
+    private UserOptions homeDirecory;
     private IEnumerable<String> directories;
 
     protected override async Task OnInitializedAsync()
     {
-        homeDirecory = config.GetValue<string>("UserOptions:HomeDirectory");
+        var section = config.GetSection(nameof(UserOptions));
+        homeDirecory = section.Get<UserOptions>();
         // homeDirecory = @"C:/Users/super/Downloads/Новая папка";
         if(homeDirecory is not null)
             directories = LoadDirectories();
@@ -29,14 +30,14 @@
 
     private IEnumerable<String> LoadDirectories()
     {
-        return (new DirectoryInfo(homeDirecory))
+        return (new DirectoryInfo(homeDirecory.HomeDirectory))
         .GetDirectories()
         .Select(e => e.Name);
     }
 
     private void Load(string path)
     {
-        homeDirecory = path;
+        homeDirecory.HomeDirectory = path;
         writableConfig.Update(e => e.HomeDirectory = path);
         if (homeDirecory is not null)
             directories = LoadDirectories();

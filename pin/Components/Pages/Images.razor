@@ -67,7 +67,9 @@
     [Parameter]
     [Required]
     public string homeDirecory { get; set; }
-    private string currentDirectory = "123";
+    [Parameter]
+    [Required]
+    public string currentDirectory { get; set; }
     [Parameter]
     [Required]
     public IEnumerable<String> directories { get; set; }
@@ -109,13 +111,14 @@
         var files = Directory.GetFiles(path);
         //var files = Directory.GetFiles(path,"*.jpg");
         for (var i = 0; i < files.Length; i++)
-        {                    
+        {
             var img = await File.ReadAllBytesAsync(files[i]);
             int targetHeight;
             using (var ms = new MemoryStream(img))
             {
                 var image  = PlatformImage.FromStream(ms);
                 targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);
+                image.Dispose();
             }
             var pl = IndexOfMin(layout);
             var left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
