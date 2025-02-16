@@ -4,6 +4,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.LifecycleEvents;
 using pin.Infrastructure;
+using pin.Services;
 using System.Reflection;
 
 namespace pin
@@ -54,6 +55,7 @@ namespace pin
 
             builder.Services.AddMauiBlazorWebView();
 
+            ConfigureServices(builder.Services);
 
 #if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
@@ -61,6 +63,11 @@ namespace pin
 #endif
 
             return builder.Build();
+        }
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            services.AddScoped<IProviderService, ProviderService>();
         }
     }
 }

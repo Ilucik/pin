@@ -1,25 +1,30 @@
-﻿namespace pin.Services
+﻿using Microsoft.Maui.Graphics.Platform;
+using pin.Infrastructure;
+
+namespace pin.Services
 {
-    public class ProviderService
+    public class ProviderService : IProviderService
     {
-        public async Task LoadImages(string path)
+        public async IAsyncEnumerable<PinImage> GetImages(string path)
         {
-            var source = new List<string>();
             var files = Directory.GetFiles(path);
-            
-            //var files = Directory.GetFiles(@"C:/rnd","*.jpg");
+            //var files = Directory.GetFiles(path,"*.jpg");
             for (var i = 0; i < files.Length; i++)
             {
-                Image image = new()
-                {
-                    Source = ImageSource.FromFile(files[i])
-                };
-
                 var img = await File.ReadAllBytesAsync(files[i]);
-                var imageSource = Convert.ToBase64String(img);
-                source.Add(imageSource);
-            }
+                int height;
+                int width;
+                using (var ms = new MemoryStream(img))
+                {
+                    var image = PlatformImage.FromStream(ms);
+                    height = Convert.ToInt32(image.Height);
+                    width = Convert.ToInt32(image.Width);
+                    image.Dispose();
+                }
 
+                var imageSource = Convert.ToBase64String(img);
+                yield return new PinImage(imageSource, width, height);
+            }
         }
     }
 }

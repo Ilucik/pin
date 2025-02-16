@@ -3,8 +3,15 @@ namespace pin.Infrastructure
 {
     public class PinImage
     {
-        public string src64;
+        public string Src64;
         public int Width;
-        public int Heigt;
+        public int Height;
+
+        public PinImage(string src64, int width, int height)
+        {
+            Src64 = src64;
+            Width = width;
+            Height = height;
+        }
     }
 }
