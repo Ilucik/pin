@@ -3,7 +3,7 @@
 {
     <div @onclick="HideModal" class="modal-container">
         <div @onclick="CursorNext" @onmousewheel="e=> Count(e)" @onclick:stopPropagation="true" style="transform:scale(@Scale)" class="pin-modal">
-            <img src="data:image/png;base64, @source[cursor].src64" />
+            <img src="data:image/png;base64, @source[cursor].Src64" />
             <div class="modal-bottom"></div>
         </div>
     </div>
@@ -12,7 +12,7 @@
 
 @code {
     private bool visible;   
-    public List<PinElement> source { get; set; }
+    public List<PinImage> source { get; set; }
     private int cursor { get;  set; }
     private double Scale = 1;
     private double ScaleSpeed = 0.001;
@@ -29,7 +29,7 @@
             cursor = 0;
     }
 
-    public void ShowModal(List<PinElement> source, int index)
+    public void ShowModal(List<PinImage> source, int index)
     {
         Scale = 1;
         this.source = source;

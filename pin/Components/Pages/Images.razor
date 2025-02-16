@@ -29,12 +29,12 @@
         <button class="stat" @onclick="Reload"><img src="/reload.png"alt="reload"style="height:1rem"/></button>
     </div>
 </section>
-@* <section columns>
+<section columns>
     <div class="columns-count">
         <button class="stat" @onclick="ColumnNuberIncrease">+</button>
         <button class="stat" @onclick="ColumnNumberDecrease">-</button>
     </div>
-</section> *@
+</section>
 <ImageModal @ref="imageModal"/>
 
 @if(!load){
@@ -43,16 +43,15 @@
     </div>
 }
 
-@if (source.Count > 0)
+@if (load && source.Count > 0)
 {
     
     <div class="pin-layout" style="height:@($"{MaxElement(layout)}px")" >
         @for (var i = 0; i < source.Count; i++)
         {
             var ci = i;
-            var a = columnPercent * (ci % columnCount);
-            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].top}px");left:@($"{source[ci].left}px")">
-                <img src="data:image/png;base64, @source[ci].src64" width="100%" />
+            <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].Top}px");left:@($"{source[ci].Left}px")">
+                <img src="data:image/png;base64, @source[ci].Src64" width="100%" />
                 <div class="item">
                 </div>
             </div>
@@ -65,7 +64,7 @@
 @code {
     private IJSObjectReference jsModule;
     private ImageModal imageModal;
-    private List<PinElement> source = new();
+    private List<PinImage> source = new();
     [Parameter]
     [Required]
     public string homeDirecory { get; set; }
@@ -79,21 +78,20 @@
     private bool modalVisible;
     private Stopwatch stopWatch = new();
     private int columnCount = 5;
-    private int columnPercent => 100 / columnCount;
+    private WindowDimensions ws;
     private int maxWidth;
     private int verticalItemMargin = 10;
     private int horizontalItemMargin = 20;
+    private int columnMin = 3;
+    private int columnMax = 6;
     private int[] layout;
-    int cursor;
+
     protected override async Task OnInitializedAsync()
     {      
         if (jsModule is null)
             jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
-        var winSize = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
-        maxWidth = (winSize.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
-
+        ws = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
         await Reload();
-
         await base.OnInitializedAsync();       
     }
 
@@ -104,45 +102,18 @@
         .Select(e=>e.Name);
     }
 
-    // private async IAsyncEnumerable<PinImage> GetImages(string path)
-    // {
-    //     source = new();
-    //     var files = Directory.GetFiles(path);
-    //     //var files = Directory.GetFiles(path,"*.jpg");
-    //     for (var i = 0; i < files.Length; i++)
-    //     {
-    //         var img = await File.ReadAllBytesAsync(files[i]);
-    //         int height;
-    //         int width;
-    //         using (var ms = new MemoryStream(img))
-    //         {
-    //             var image = PlatformImage.FromStream(ms);
-    //             height = Convert.ToInt32(image.Height);
-    //             width = Convert.ToInt32(image.Width);
-    //             image.Dispose();
-    //         }
-
-    //         var imageSource = Convert.ToBase64String(img);
-    //         yield return new PinImage(imageSource, width, height);
-    //     }
-    // }
-
-    private async Task Resize(IAsyncEnumerable<PinImage> images)
+    private async IAsyncEnumerable<PinImage> Resize(IAsyncEnumerable<PinImage> images)
     {
+        maxWidth = (ws.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
         layout = new int[columnCount];
         await foreach (var image in images)
         {
             var targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);            
             var pl = IndexOfMin(layout);
-            var left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
-            var top = Convert.ToInt32(layout[pl]);
+            image.Left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
+            image.Top = Convert.ToInt32(layout[pl]);
             layout[pl] += targetHeight + verticalItemMargin;
-            source.Add(new PinElement()
-                {
-                    left = left,
-                    top = top,
-                    src64 = image.Src64
-                });
+            yield return image;
         }
     }
 
@@ -150,24 +121,11 @@
     {
         load = false;
         stopWatch.Restart();
-        source = new();
         var a = _providerService.GetImages(Path.Combine(homeDirecory, currentDirectory));
-        await Resize(a);
+        source = await Resize(a).ToListAsync();
         load = true;
         stopWatch.Stop();
         StateHasChanged();
-    }
-
-    private void CursorNext()
-    {
-        cursor++;
-        if (cursor < 0 || cursor >= source.Count)
-            cursor = 0;
-    }
-
-    private void HideModal()
-    {
-        modalVisible = false;
     }
 
     private void ShowModal(int index)
@@ -177,23 +135,25 @@
         imageModal.ShowModal(source, index);
     }
 
-    private async void ChangeDirectory(ChangeEventArgs e)
+    private async Task ChangeDirectory(ChangeEventArgs e)
     {
         currentDirectory = e.Value?.ToString();
         await Reload();
     }
 
-    private void ColumnNuberIncrease()
+    private async Task ColumnNuberIncrease()
     {
-        if (columnCount < 6)
+        if (columnCount < columnMax)
             columnCount++;
+        source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
         StateHasChanged();
     }
 
-    private void ColumnNumberDecrease()
+    private async Task ColumnNumberDecrease()
     {
-        if (columnCount > 0)
+        if (columnCount > columnMin)
             columnCount--;
+        source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
         StateHasChanged();
     }
 
