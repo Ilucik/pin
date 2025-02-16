@@ -1,6 +1,7 @@
 ﻿@using System.Diagnostics;
 @using Microsoft.Maui.Graphics.Platform
 @using System.ComponentModel.DataAnnotations
+@using pin.Extensions
 @using pin.Infrastructure
 @using pin.Services
 @inject IJSRuntime _jsRuntime
@@ -46,7 +47,7 @@
 @if (load && source.Count > 0)
 {
     
-    <div class="pin-layout" style="height:@($"{MaxElement(layout)}px")" >
+    <div class="pin-layout" style="height:@($"{layout.Max()}px")" >
         @for (var i = 0; i < source.Count; i++)
         {
             var ci = i;
@@ -109,7 +110,7 @@
         await foreach (var image in images)
         {
             var targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);            
-            var pl = IndexOfMin(layout);
+            var pl = layout.IndexOfMin();
             image.Left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
             image.Top = Convert.ToInt32(layout[pl]);
             layout[pl] += targetHeight + verticalItemMargin;
@@ -155,31 +156,6 @@
             columnCount--;
         source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
         StateHasChanged();
-    }
-
-    private float MaxElement(int[] src)
-    {
-        var max = int.MinValue;
-        foreach(var e in src)
-            if(e > max)
-                max = e;
-        return max;
-    }
-
-    private int IndexOfMin(int[] src)
-    {
-        var min = int.MaxValue;
-        var ind = -1;
-        for(var i = 0;i< src.Length; i++)
-        {
-            if(src[i] < min)
-            {
-                min = src[i];
-                ind = i;
-            }
-        }
-
-        return ind;
     }
 
     public class WindowDimensions
