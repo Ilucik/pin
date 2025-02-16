@@ -27,12 +27,12 @@
         <button class="stat" @onclick="Reload"><img src="/reload.png"alt="reload"style="height:1rem"/></button>
     </div>
 </section>
-<section columns>
+@* <section columns>
     <div class="columns-count">
         <button class="stat" @onclick="ColumnNuberIncrease">+</button>
         <button class="stat" @onclick="ColumnNumberDecrease">-</button>
     </div>
-</section>
+</section> *@
 <ImageModal @ref="imageModal"/>
 
 @if(!load){
@@ -73,7 +73,7 @@
     [Parameter]
     [Required]
     public IEnumerable<String> directories { get; set; }
-    private bool load = true;
+    private bool load;
     private bool modalVisible;
     private Stopwatch stopWatch = new();
     private int columnCount = 5;
@@ -90,7 +90,7 @@
         var winSize = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
         maxWidth = (winSize.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
 
-        // await Reload();
+        await Reload();
 
         await base.OnInitializedAsync();       
     }
