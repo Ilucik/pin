@@ -3,7 +3,7 @@
 @using pin.Infrastructure
 @inject IConfiguration config
 @inject IWritableOptions<UserOptions> writableConfig
-@if(homeDirecory is null)
+@if (homeDirecory is null || homeDirecory.HomeDirectory is null)
 {
     <SelectHomeDirectory OnClickCallback="Load" />
 }
@@ -21,7 +21,7 @@
         var section = config.GetSection(nameof(UserOptions));
         homeDirecory = section.Get<UserOptions>();
         // homeDirecory = @"C:/Users/super/Downloads/Новая папка";
-        if(homeDirecory is not null)
+        if(homeDirecory is not null && homeDirecory.HomeDirectory is not null)
             directories = LoadDirectories();
 
         await base.OnInitializedAsync();
@@ -37,9 +37,11 @@
 
     private void Load(string path)
     {
-        homeDirecory.HomeDirectory = path;
-        writableConfig.Update(e => e.HomeDirectory = path);
-        if (homeDirecory is not null)
-            directories = LoadDirectories();
+        homeDirecory.HomeSubdirectory = path;
+        homeDirecory.HomeDirectory = Directory.GetParent(path).FullName;
+        writableConfig.Update(e => { 
+            e.HomeDirectory = homeDirecory.HomeDirectory;
+            e.HomeSubdirectory = homeDirecory.HomeSubdirectory; });
+        directories = LoadDirectories();
     }
 }

@@ -4,12 +4,16 @@
 
 @code {
     private string path = "C:/";
+    private string errorMSg = "";
     [Parameter]
     [Required]
     public EventCallback<string> OnClickCallback { get; set; }
 
     private void Submit()
     {
-        OnClickCallback.InvokeAsync(path);
+        if (Path.Exists(path))
+            OnClickCallback.InvokeAsync(path);
+        else
+            errorMSg = "invalid path, try more";
     }
 }
