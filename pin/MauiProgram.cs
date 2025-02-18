@@ -39,14 +39,16 @@ namespace pin
             });  
         });
 #endif
-            //var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            //var appPath = Path.Combine(appDataPath, "pin");
-            //var wwwrootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot");
-            //var fi = new FileInfo(wwwrootPath);
-            //fi.CopyTo(appPath);
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var appPath = Path.Combine(appDataPath, "pin");
+            var wwwrootPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot","appsettings.json");
+            if(!Directory.Exists(appPath))
+                Directory.CreateDirectory(appPath);
+            if (!File.Exists(Path.Combine(appPath, "appsettings.json")))
+                File.Copy(wwwrootPath, Path.Combine(appPath, "appsettings.json"));
 
             var config = new ConfigurationBuilder()
-                .SetBasePath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot"))
+                .SetBasePath(appPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 //.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .Build();

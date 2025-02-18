@@ -26,7 +26,7 @@ namespace pin.Infrastructure
 
         public void Update(Action<T> applyChanges)
         {
-            var fileProvider = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot","appsettings.json");
+            var fileProvider = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "pin","appsettings.json");
             var sectionName = typeof(T).Name;
 
             var jObject = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(fileProvider));

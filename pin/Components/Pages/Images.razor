@@ -75,7 +75,7 @@
     [Parameter]
     [Required]
     public IEnumerable<String> directories { get; set; }
-    private bool load;
+    private bool load = true;
     private bool modalVisible;
     private Stopwatch stopWatch = new();
     private int columnCount = 5;
@@ -92,7 +92,8 @@
         if (jsModule is null)
             jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
         ws = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
-        await Reload();
+        if(currentDirectory is not null)
+            await Reload();
         await base.OnInitializedAsync();       
     }
 
@@ -121,6 +122,7 @@
     private async Task Reload()
     {
         load = false;
+        StateHasChanged();
         stopWatch.Restart();
         var a = _providerService.GetImages(Path.Combine(homeDirecory, currentDirectory));
         source = await Resize(a).ToListAsync();
