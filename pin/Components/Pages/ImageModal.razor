@@ -1,12 +1,15 @@
 ﻿@using pin.Infrastructure
 @if (visible)
 {
-    <div @onclick="HideModal" class="modal-container">
-        <div @onclick="CursorNext" @onmousewheel="e=> Count(e)" @onclick:stopPropagation="true" style="transform:scale(@Scale)" class="pin-modal">
+    <div @onclick="HideModal" @onmousewheel="e=> Count(e)" class="modal-container">
+        <div @onclick="CursorNext"  @onclick:stopPropagation="true" style="transform:scale(@Scale)" class="pin-modal">
             <img src="data:image/png;base64, @source[cursor].Src64" />
             <div class="modal-bottom"></div>
         </div>
     </div>
+    <style>
+        body{overflow:hidden}
+    </style>
 }
 
 
@@ -15,7 +18,7 @@
     public List<PinImage> source { get; set; }
     private int cursor { get;  set; }
     private double Scale = 1;
-    private double ScaleSpeed = 0.001;
+    private double ScaleSpeed = -0.001;
 
     private void HideModal()
     {
@@ -41,7 +44,7 @@
     private void Count(WheelEventArgs e)
     {
         var newScale = Scale + e.DeltaY * ScaleSpeed;
-        if (newScale > 0.01)
+        if (newScale > 0.5)
             Scale = newScale;
     }
 }
