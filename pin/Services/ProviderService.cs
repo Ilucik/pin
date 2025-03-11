@@ -1,5 +1,6 @@
 ﻿using Microsoft.Maui.Graphics.Platform;
 using pin.Infrastructure;
+using System.Text.RegularExpressions;
 
 namespace pin.Services
 {
@@ -7,11 +8,14 @@ namespace pin.Services
     {
         public async IAsyncEnumerable<PinImage> GetImages(string path)
         {
-            var files = Directory.GetFiles(path);
+            //var files = Directory.GetFiles(path);
             //var files = Directory.GetFiles(path,"*.jpg");
-            for (var i = 0; i < files.Length; i++)
+            var exensions = new string[] {"jpg","png","gif","webp"};
+            var regex = $"^.+\\.{String.Join('|',exensions)}$";
+            var files = Directory.EnumerateFiles(path).Where(file => Regex.IsMatch(file, regex,RegexOptions.IgnoreCase));
+            foreach (var e in files)
             {
-                var img = await File.ReadAllBytesAsync(files[i]);
+                var img = await File.ReadAllBytesAsync(e);
                 int height;
                 int width;
                 using (var ms = new MemoryStream(img))
