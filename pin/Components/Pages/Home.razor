@@ -37,8 +37,7 @@
 
     private void Load(string path)
     {
-        homeDirecory.HomeSubdirectory = path;
-        homeDirecory.HomeDirectory = Directory.GetParent(path).FullName;
+        homeDirecory.HomeDirectory = path;
         writableConfig.Update(e => { 
             e.HomeDirectory = homeDirecory.HomeDirectory;
             e.HomeSubdirectory = homeDirecory.HomeSubdirectory; });

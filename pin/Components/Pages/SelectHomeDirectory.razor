@@ -1,19 +1,33 @@
 ﻿@using System.ComponentModel.DataAnnotations
-<input @bind-value=@path />
-<button @onclick="Submit">submit</button>
+@using CommunityToolkit.Maui.Storage
+@using Microsoft.Maui.Storage
 
+<button @onclick="OnInputFileChange">Choose folder</button>
+
+@* <InputFile OnChange="@OnInputFileChange" webkitdirectory  directory /> *@
+
+<div>
+@errorMSg
+</div>
 @code {
-    private string path = "C:/";
     private string errorMSg = "";
     [Parameter]
     [Required]
     public EventCallback<string> OnClickCallback { get; set; }
 
-    private void Submit()
+    private async Task OnInputFileChange()
     {
-        if (Path.Exists(path))
-            OnClickCallback.InvokeAsync(path);
-        else
-            errorMSg = "invalid path, try more";
+        try
+        {
+            var folder = await FolderPicker.PickAsync(default);
+            if (folder.IsSuccessful)
+                await OnClickCallback.InvokeAsync(folder.Folder.Path);
+            else
+                errorMSg = "smth go wrong";
+        }
+        catch (Exception e)
+        {
+            errorMSg = e.Message;
+        }
     }
 }

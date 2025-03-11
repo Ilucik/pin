@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using CommunityToolkit.Maui;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices.Sensors;
@@ -16,6 +17,7 @@ namespace pin
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -69,7 +71,7 @@ namespace pin
 
         private static void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IProviderService, ProviderService>();
+            services.AddTransient<IProviderService, ProviderService>();
         }
     }
 }
