@@ -39,6 +39,11 @@ namespace pin.Services
                 .Where(file => Regex.IsMatch(file, regex, RegexOptions.IgnoreCase))
                 .Skip(pag.Skip)
                 .Take(pag.Take);
+            if (!files.Any())
+            {
+                pag.isEnded = true;
+                yield break;
+            }
             foreach (var e in files)
             {
                 var img = await File.ReadAllBytesAsync(e);

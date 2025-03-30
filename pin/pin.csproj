@@ -77,6 +77,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Include="wwwroot\js\IntersectionObserver.js" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />

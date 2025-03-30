@@ -1,0 +1,70 @@
+﻿@using pin.Infrastructure.CusomEventArgs
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div @ref="targetElement" @onintersectionchanged="OnIntersectionChanged" style="height:5px;"></div>
+
+@code {
+	[Parameter]
+	public EventCallback OnIntersectionCallback { get; set; }
+
+	public ElementReference targetElement;
+
+    IJSObjectReference? module;
+    IJSObjectReference? intersectionObserver;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender || module is not null)
+		{
+			return;
+		}
+
+		try
+		{
+			module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/IntersectionObserver.js");
+
+			intersectionObserver = await module.InvokeAsync<IJSObjectReference>("construct", new
+			{
+				RootMargin = "0px",
+				Threshold = 0.01
+			});
+
+			await intersectionObserver!.InvokeVoidAsync("observe", targetElement);			
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	private async Task OnIntersectionChanged(IntersectionChangedEventArgs args)
+	{
+		await OnIntersectionCallback.InvokeAsync();
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (intersectionObserver is not null)
+		{
+			try
+			{
+				await intersectionObserver.InvokeVoidAsync("disconnect");
+				await intersectionObserver.DisposeAsync();
+			}
+			catch (Exception)
+			{
+			}
+		}
+
+		if (module is not null)
+		{
+			try
+			{
+				await module.DisposeAsync();
+			}
+			catch (Exception)
+			{
+			}
+		}
+	}
+}
