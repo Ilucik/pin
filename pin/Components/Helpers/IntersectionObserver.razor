@@ -2,11 +2,13 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JS
 
-<div @ref="targetElement" @onintersectionchanged="OnIntersectionChanged" style="height:5px;"></div>
+<div id="io-bottom" @ref="targetElement" @onintersectionchanged="OnIntersectionChanged" style="top:@(PositionTop)px"></div>
 
 @code {
 	[Parameter]
 	public EventCallback OnIntersectionCallback { get; set; }
+	[Parameter]
+	public int PositionTop { get; set; }
 
 	public ElementReference targetElement;
 

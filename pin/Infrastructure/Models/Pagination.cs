@@ -10,6 +10,7 @@
         {
             Skip = skip;
             Take = take;
+            isEnded = false;
         }
     }
 }

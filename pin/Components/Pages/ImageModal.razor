@@ -2,7 +2,7 @@
 @if (visible)
 {
     <div @onclick="HideModal" @onmousewheel="e=> Count(e)" class="modal-container">
-        <div @onclick="CursorNext"  @onclick:stopPropagation="true" style="transform:scale(@(Scale.ToString(System.Globalization.CultureInfo.InvariantCulture))" class="pin-modal">
+        <div @onclick="CursorNext"  @onclick:stopPropagation="true" style="transform:scale(@(Scale.ToString(System.Globalization.CultureInfo.InvariantCulture)))" class="pin-modal">
             <img src="data:image/png;base64, @source[cursor].Src64" />
             <div class="modal-bottom"></div>
         </div>
