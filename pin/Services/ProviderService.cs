@@ -32,7 +32,7 @@ namespace pin.Services
 
         public async IAsyncEnumerable<PinImage> GetImages(string path, Pagination pag)
         {
-            var exensions = new string[] { "jpg", "png", "gif", "webp" };
+            var exensions = new string[] { "jpg", "jpeg", "png", "gif", "webp" };
             var regex = $"^.+\\.{String.Join('|', exensions)}$";
             var files = Directory
                 .EnumerateFiles(path)
