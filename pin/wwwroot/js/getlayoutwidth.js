@@ -1,6 +1,6 @@
 export function getlayoutwidth() {
     return {
-        width: parseInt($(".content").width()),
-        height: parseInt($(".content").height())
+        width: parseInt($(".content-main").width()),
+        height: parseInt($(".content-main").height())
     };
 };

@@ -1,9 +1,12 @@
 .stat {
     display: inline-block;
     border: 1px solid #cdcdcd;
-    padding: 10px 20px;
     margin: 0 5px;
     border-radius: 20px;
+}
+
+.content-tooltip .stat{
+    padding: 10px 20px;
 }
 
 .pin-layout {
@@ -52,6 +55,20 @@
     border-radius: 50%;
     border: 8px solid #C0C0C0;
     animation: l20-1 0.8s infinite linear alternate, l20-2 1.6s infinite linear;
+}
+
+.help-bar {
+    height: 100vh;
+    width: 50px;
+    display:flex;
+    flex-direction:column;
+    justify-content: space-between;
+    padding:80px 0px;
+    position: fixed;
+}
+
+.content-main{
+    padding-top:20px;
 }
 
 @keyframes l20-1 {
