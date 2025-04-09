@@ -25,7 +25,6 @@
         @* <div class="stat">@load</div> *@
         <div class="stat">кол-во: @source.Count</div>
         <button class="stat" @onclick="Reload"><img src="/reload.png"alt="reload"style="height:1rem"/></button>
-        <button class="stat" @onclick="JustForBreakpoint">br</button>
     </div>
 </section>
 <section columns>
@@ -179,11 +178,6 @@
         layout = new int[columnCount];
         source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
         StateHasChanged();
-    }
-
-    private async Task JustForBreakpoint()
-    {
-        return;
     }
 
     public class WindowDimensions
