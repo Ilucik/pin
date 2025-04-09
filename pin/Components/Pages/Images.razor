@@ -12,7 +12,7 @@
 <section tooltip>
     <div>
         @if(directories is not null){
-            <select class="stat" @onchange ="ChangeDirectory">
+            <select class="stat" @bind=currentDirectory @bind:after=Reload>
 
                 <option value=""></option>
                 @foreach (var d in directories)
