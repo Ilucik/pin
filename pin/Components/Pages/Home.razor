@@ -1,46 +1,34 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Configuration
-@using pin.Infrastructure
+@using pin.Infrastructure;
+@using pin.Infrastructure.Models.Settings
 @inject IConfiguration config
-@inject IWritableOptions<UserOptions> writableConfig
-@if (homeDirecory is null || homeDirecory.HomeDirectory is null)
+@inject IWritableOptions<Settings> writableConfig
+@inject NavigationManager Navigation
+@if (directorySettings is null || directorySettings.HomeDirectory is null)
 {
     <SelectHomeDirectory OnClickCallback="Load" />
 }
-@if (directories is not null)
-{
-    <Images homeDirecory="@homeDirecory.HomeDirectory" directories="@directories" currentDirectory="@homeDirecory.HomeSubdirectory"/>
-}
 
 @code {
-    private UserOptions homeDirecory;
-    private IEnumerable<String> directories;
+    private DirectorySetting directorySettings;
 
     protected override async Task OnInitializedAsync()
     {
-        var section = config.GetSection(nameof(UserOptions));
-        homeDirecory = section.Get<UserOptions>();
-        // homeDirecory = @"C:/Users/super/Downloads/Новая папка";
-        if(homeDirecory is not null && homeDirecory.HomeDirectory is not null)
-            directories = LoadDirectories();
+        var settings = config.GetSection(nameof(Settings)).Get<Settings>();
+        directorySettings = settings.DirectorySetting;
+        if (directorySettings is not null && directorySettings.HomeDirectory is not null)
+            Navigation.NavigateTo(nameof(Images));
 
         await base.OnInitializedAsync();
     }
 
-
-    private IEnumerable<String> LoadDirectories()
-    {
-        return (new DirectoryInfo(homeDirecory.HomeDirectory))
-        .GetDirectories()
-        .Select(e => e.Name);
-    }
-
     private void Load(string path)
     {
-        homeDirecory.HomeDirectory = path;
+        directorySettings.HomeDirectory = path;
         writableConfig.Update(e => { 
-            e.HomeDirectory = homeDirecory.HomeDirectory;
-            e.HomeSubdirectory = homeDirecory.HomeSubdirectory; });
-        directories = LoadDirectories();
+            e.DirectorySetting.HomeDirectory = directorySettings.HomeDirectory;
+            e.DirectorySetting.HomeSubdirectory = directorySettings.HomeSubdirectory;
+        });
     }
 }

@@ -66,6 +66,10 @@
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Components\Pages\gpz4gmkf.alp~" />
+    </ItemGroup>
+
     <!-- <ItemGroup>
       <Content Remove="wwwroot\appsettings.json" />
     </ItemGroup> -->
@@ -88,6 +92,10 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Infrastructure\Options\" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,6 @@
-﻿@using System.Diagnostics;
+﻿@page "/Images"
+@using System.Diagnostics;
+@using Microsoft.Extensions.Configuration
 @using Microsoft.Maui.Graphics.Platform
 @using System.ComponentModel.DataAnnotations
 @using pin.Components.Helpers
@@ -6,84 +8,90 @@
 @using pin.Infrastructure
 @using pin.Infrastructure.Models
 @using pin.Services
+@using pin.Infrastructure.Models.Settings
+@inject IConfiguration config
 @inject IJSRuntime _jsRuntime
 @inject IProviderService _providerService
-<div class="help-bar" style=@(position?"right:0px;border-left: 1px solid #e9e9e9;":"left:0px;border-right: 1px solid #e9e9e9;")>
-    <div style="height:10px;width:10px"></div>
-    <button class="stat" onclick="window.scrollTo(0, 0);" style="bottom:100px;"><img src="/arrow.png" style="height:1rem" /></button>
-</div>
-<div class="content-main" style=@(position? "padding-left:10px;padding-right:75px;":"padding-left:60px;padding-right:25px;")>
-    <div class="content-tooltip">
-        @if(directories is not null){
-            <select class="stat" @bind=currentDirectory @bind:after=Reload>
+@if (settings is not null){
+    <div class="help-bar" style=@(settings.SideBarToLeft?"left:0px;border-right: 1px solid #e9e9e9;":"right:0px;border-left: 1px solid #e9e9e9;")>
+        <button class="stat" @onclick="ShowSettings"><img src="/icons/setting.png" style="height:1rem" /></button>
+        <button class="stat" onclick="window.scrollTo(0, 0);"><img src="/icons/arrow.png" style="height:1rem" /></button>
+    </div>
+    @if (settingsVisible)
+    {
+        <SettingsPage CloseCallback="ShowSettings" Settings="@settings"></SettingsPage>
+    }
+    <div class="content-main" style=@(settings.SideBarToLeft?"padding-left:60px;padding-right:25px;":"padding-left:10px;padding-right:75px;")>
+        <div class="content-tooltip">
+            <span>
+                @if(directories is not null){
+                    <select class="stat" @bind=currentDirectory @bind:after=Reload>
 
-                <option value=""></option>
-                @foreach (var d in directories)
-                {
-                    <option value="@d"> @d </option>
+                        <option value=""></option>
+                        @foreach (var d in directories)
+                        {
+                            <option value="@d"> @d </option>
+                        }
+
+                    </select>
                 }
-
-            </select>
-        }
-        @* <div class="stat">@load</div> *@
-        <div class="stat">кол-во: @source.Count</div>
-        <button class="stat" @onclick="Reload"><img src="/reload.png" style="height:1rem"/></button>
-        <button class="stat" @onclick="TooltipChange">tl</button>
-    
-        <div class="columns">
-            <div class="columns-count">
+                @* <div class="stat">@load</div> *@
+                @if (load && source.Count > 0)
+                {
+                    <span class="stat">images: @source.Count</span>
+                    <span class="stat">@Double.Round(stopWatch.Elapsed.TotalSeconds,3)</span>
+                    <button class="stat" @onclick="Reload"><img src="/icons/reload.png" style="height:1rem" /></button>
+                }
+            </span>    
+            <span class="columns-count">
                 <button class="stat" @onclick="ColumnNuberIncrease">+</button>
                 <button class="stat" @onclick="ColumnNumberDecrease">-</button>
+            </span>
+        </div>
+
+        <ImageModal @ref="imageModal"/>
+
+        @if(!load){
+            <div class="loader-container">
+                <div class="loader"></div>
             </div>
-        </div>
-    </div>
-    <ImageModal @ref="imageModal"/>
+        }
 
-    @if(!load){
-        <div class="loader-container">
-            <div class="loader"></div>
-        </div>
-    }
+        @if (load && source.Count > 0)
+        {
 
-    @if (load && source.Count > 0)
-    {
-
-        <div class="pin-layout" style="height:@($"{layout.Max()}px")" >
-            @for (var i = 0; i < source.Count; i++)
-            {
-                var ci = i;
-                <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].Top}px");left:@($"{source[ci].Left}px")">
-                    <img src="data:image/png;base64, @source[ci].Src64" width="100%" />
-                    <div class="item">
+            <div class="pin-layout" style="height:@($"{layout.Max()}px")" >
+                @for (var i = 0; i < source.Count; i++)
+                {
+                    var ci = i;
+                    <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].Top}px");left:@($"{source[ci].Left}px")">
+                        <img src="data:image/png;base64, @source[ci].Src64" width="100%" />
+                        <div class="item">
+                        </div>
                     </div>
-                </div>
-            }
+                }
 
-            @if (!pagination.isEnded)
-            {
-                <IntersectionObserver OnIntersectionCallback="LoadMore" PositionTop="@ioPos"></IntersectionObserver>
-            }
-        </div>   
-        @* <button @onclick="LoadMore">Загрузить ещё</button> *@
-    }
+                @if (!pagination.isEnded)
+                {
+                    <IntersectionObserver OnIntersectionCallback="LoadMore" PositionTop="@ioPos"></IntersectionObserver>
+                }
+            </div>   
+            @* <button @onclick="LoadMore">Загрузить ещё</button> *@
+        }
 
-</div>
+    </div>
+}
 
 @code {
     private IJSObjectReference jsModule;
     private ImageModal imageModal;
     private List<PinImage> source = new();
-    [Parameter]
-    [Required]
-    public string homeDirecory { get; set; }
-    [Parameter]
-    [Required]
-    public string currentDirectory { get; set; }
-    [Parameter]
-    [Required]
-    public IEnumerable<String> directories { get; set; }
+    private Settings settings;
+    private string currentDirectory;
+    private IEnumerable<String> directories { get; set; }
     private bool load = true;
     private bool modalVisible;
+    private bool settingsVisible;
     private Stopwatch stopWatch = new();
     private int columnCount = 5;
     private WindowDimensions ws;
@@ -94,24 +102,21 @@
     private int columnMin = 3;
     private int columnMax = 6;
     private int[] layout;
-    private bool position;
     private Pagination pagination = new(0, 20);
 
     protected override async Task OnInitializedAsync()
-    {      
+    {     
+        settings = config.GetSection(nameof(Settings)).Get<Settings>();
+        currentDirectory = settings.DirectorySetting.HomeSubdirectory;
+        directories = (new DirectoryInfo(settings.DirectorySetting.HomeDirectory))
+            .GetDirectories()
+            .Select(e => e.Name);
         if (jsModule is null)
             jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
         ws = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
         if(currentDirectory is not null)
             await Reload();
         await base.OnInitializedAsync();       
-    }
-
-    private IEnumerable<String> LoadDirectories()
-    {
-        return (new DirectoryInfo(homeDirecory))
-        .GetDirectories()
-        .Select(e=>e.Name);
     }
 
     private async IAsyncEnumerable<PinImage> Resize(IAsyncEnumerable<PinImage> images)
@@ -135,7 +140,7 @@
         stopWatch.Restart();
         layout = new int[columnCount];
         pagination = new(0, 20);
-        var a = _providerService.GetImages(Path.Combine(homeDirecory, currentDirectory), pagination);
+        var a = _providerService.GetImages(Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory), pagination);
         source = await Resize(a).ToListAsync();
         ioPos = 0;
         pagination.Skip += pagination.Take;
@@ -147,7 +152,7 @@
     private async Task LoadMore()
     {       
         var lastRowHeight = layout[0];
-        var a = _providerService.GetImages(Path.Combine(homeDirecory, currentDirectory), pagination);        
+        var a = _providerService.GetImages(Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory), pagination);
         await foreach (var e in Resize(a))
             source.Add(e);
         ioPos = lastRowHeight;
@@ -160,6 +165,11 @@
         // cursor = index;
         modalVisible = true;
         imageModal.ShowModal(source, index);
+    }
+
+    private void ShowSettings()
+    {
+        settingsVisible = !settingsVisible;
     }
 
     private async Task ChangeDirectory(ChangeEventArgs e)
@@ -183,12 +193,6 @@
             columnCount--;
         layout = new int[columnCount];
         source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
-        StateHasChanged();
-    }
-
-    private void TooltipChange(MouseEventArgs e)
-    {
-        position = !position;
         StateHasChanged();
     }
 

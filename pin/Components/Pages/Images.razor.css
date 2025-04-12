@@ -5,7 +5,12 @@
     border-radius: 20px;
 }
 
-.content-tooltip .stat{
+.content-tooltip {
+    display:flex;
+    justify-content: space-between;
+}
+
+.content-tooltip .stat {
     padding: 10px 20px;
 }
 

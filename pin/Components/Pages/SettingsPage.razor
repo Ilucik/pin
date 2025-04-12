@@ -1,0 +1,51 @@
+﻿@using Microsoft.Extensions.Configuration
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.Extensions.Options
+@using pin.Infrastructure;
+@using pin.Infrastructure.Models.Settings
+@inject IOptions<Settings> writableConfig
+@inject NavigationManager Navigation
+<div @onclick="CloseCallback" class="settings-container">
+    <div @onclick:stopPropagation="true" class="settings-page">
+        <p>Home directory: @Settings.DirectorySetting.HomeDirectory</p>
+        <SelectHomeDirectory OnClickCallback="(e)=>Settings.DirectorySetting.HomeDirectory = e" />
+        <span>Start directory:  </span>
+        <select class="stat" @bind=Settings.DirectorySetting.HomeSubdirectory>
+            @foreach (var d in directories)
+            {
+                <option value="@d"> @d </option>
+            }
+
+        </select>
+        <div>
+            <InputRadioGroup @bind-Value="Settings.SideBarToLeft" @onchange=StateHasChanged>
+                    <InputRadio Value="true"/> <label>left</label>
+                    <InputRadio Value="false"/> <label>right </label>
+            </InputRadioGroup>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    [Required]
+    public Settings Settings{ get; set; }
+    [Parameter]
+    [Required]
+    public EventCallback CloseCallback{ get; set; }
+    private IEnumerable<String> directories { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        directories = (new DirectoryInfo(Settings.DirectorySetting.HomeDirectory))
+           .GetDirectories()
+           .Select(e => e.Name);
+        await base.OnInitializedAsync();
+    }
+
+    private void Save()
+    {
+        writableConfig.Value.SideBarToLeft = Settings.SideBarToLeft;
+    }
+}

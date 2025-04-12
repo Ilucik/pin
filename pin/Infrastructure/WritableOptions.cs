@@ -28,7 +28,6 @@ namespace pin.Infrastructure
         {
             var fileProvider = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "pin","appsettings.json");
             var sectionName = typeof(T).Name;
-
             var jObject = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(fileProvider));
             var sectionObject = jObject.TryGetValue(sectionName, out JToken section) ?
                 JsonConvert.DeserializeObject<T>(section.ToString()) : (Value ?? new T());

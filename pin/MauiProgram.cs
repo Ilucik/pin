@@ -5,6 +5,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.LifecycleEvents;
 using pin.Infrastructure;
+using pin.Infrastructure.Models.Settings;
 using pin.Services;
 using System.Reflection;
 
@@ -55,7 +56,8 @@ namespace pin
                 //.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .Build();
             builder.Configuration.AddConfiguration(config);
-            builder.Services.ConfigureWritable<UserOptions>();
+            //builder.Services.Configure<Settings>(builder.Configuration.GetSection(nameof(Settings)));
+            builder.Services.ConfigureWritable<Settings>();
 
             builder.Services.AddMauiBlazorWebView();
 

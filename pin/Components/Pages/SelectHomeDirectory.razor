@@ -14,12 +14,14 @@
     [Parameter]
     [Required]
     public EventCallback<string> OnClickCallback { get; set; }
+    [Parameter]
+    public string InitPath { get; set; }
 
     private async Task OnInputFileChange()
     {
         try
         {
-            var folder = await FolderPicker.PickAsync(default);
+            var folder = await FolderPicker.PickAsync(InitPath, default);
             if (folder.IsSuccessful)
                 await OnClickCallback.InvokeAsync(folder.Folder.Path);
             else
