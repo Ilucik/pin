@@ -21,7 +21,7 @@ namespace pin.Services
                 yield break;
             }
 
-            foreach(var e in await RunWorkersAsync(files, StringToPinImage, 5).ConfigureAwait(false))
+            foreach(var e in await RunWorkersAsync(files, StringToPinImage, 10).ConfigureAwait(false))
             yield return e;
         }
 

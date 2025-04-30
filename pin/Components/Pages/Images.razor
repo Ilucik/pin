@@ -1,5 +1,6 @@
 ﻿@page "/Images"
 @using System.Diagnostics;
+@using CommunityToolkit.Maui.Storage
 @using Microsoft.Extensions.Configuration
 @using Microsoft.Maui.Graphics.Platform
 @using System.ComponentModel.DataAnnotations
@@ -14,8 +15,13 @@
 @inject IProviderService _providerService
 @if (settings is not null){
     <div class="help-bar" style=@(settings.SideBarToLeft?"left:0px;border-right: 1px solid #e9e9e9;":"right:0px;border-left: 1px solid #e9e9e9;")>
-        <button class="stat" @onclick="ShowSettings"><img src="/icons/setting.png" style="height:1rem" /></button>
-        <button class="stat" onclick="window.scrollTo(0, 0);"><img src="/icons/arrow.png" style="height:1rem" /></button>
+        <div>
+            <button class="stat" @onclick="ShowSettings" title="settings" style="margin-bottom:20px;"><img src="/icons/setting.png" style="height:1rem;" /></button>
+            <button class="stat" @onclick="OpenAdditionalPath" title="open additional path"><img src="/icons/folder.png" style="height:1rem" /></button>
+        </div>
+        <div>
+            <button class="stat" onclick="window.scrollTo(0, 0);" title="up"><img src="/icons/arrow.png" style="height:1rem" /></button>
+        </div>
     </div>
     @if (settingsVisible)
     {
@@ -25,7 +31,7 @@
         <div class="content-tooltip">
             <span>
                 @if(directories is not null){
-                    <select class="stat" @bind=currentDirectory @bind:after=Reload>
+                    <select class="stat" @bind=currentDirectory @bind:after=InitLoad>
 
                         <option value=""></option>
                         @foreach (var d in directories)
@@ -36,7 +42,7 @@
                     </select>
                 }
                 @* <div class="stat">@load</div> *@
-                @if (load && source.Count > 0)
+                @if (source.Count > 0)
                 {
                     <span class="stat">images: @source.Count</span>
                     <span class="stat">@Double.Round(stopWatch.Elapsed.TotalSeconds,3)</span>
@@ -51,13 +57,9 @@
 
         <ImageModal @ref="imageModal"/>
 
-        @if(!load){
-            <div class="loader-container">
-                <div class="loader"></div>
-            </div>
-        }
+        
 
-        @if (load && source.Count > 0)
+        @if (source.Count > 0)
         {
 
             <div class="pin-layout" style="height:@($"{layout.Max()}px")" >
@@ -79,6 +81,13 @@
             @* <button @onclick="LoadMore">Загрузить ещё</button> *@
         }
 
+        @if (!load)
+        {
+            <div class="loader-container">
+                <div class="loader"></div>
+            </div>
+        }
+
     </div>
 }
 
@@ -88,6 +97,7 @@
     private List<PinImage> source = new();
     private Settings settings;
     private string currentDirectory;
+    private string currentPath;
     private IEnumerable<String> directories { get; set; }
     private bool load = true;
     private bool modalVisible;
@@ -114,9 +124,17 @@
         if (jsModule is null)
             jsModule = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/getlayoutwidth.js");
         ws = await jsModule.InvokeAsync<WindowDimensions>("getlayoutwidth");
-        if(currentDirectory is not null)
-            await Reload();
+        if (currentDirectory is not null)
+        {
+            await InitLoad();
+        }
         await base.OnInitializedAsync();       
+    }
+
+    private async Task InitLoad()
+    {
+        currentPath = Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory);
+        await Reload();
     }
 
     private async IAsyncEnumerable<PinImage> Resize(IAsyncEnumerable<PinImage> images)
@@ -136,11 +154,12 @@
     private async Task Reload()
     {
         load = false;
+        source = new();
         StateHasChanged();
         stopWatch.Restart();
         layout = new int[columnCount];
         pagination = new(0, 20);
-        var a = _providerService.GetImages(Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory), pagination);
+        var a = _providerService.GetImages(currentPath, pagination);
         source = await Resize(a).ToListAsync();
         ioPos = 0;
         pagination.Skip += pagination.Take;
@@ -150,13 +169,15 @@
     }
 
     private async Task LoadMore()
-    {       
+    {
+        load = false;
         var lastRowHeight = layout[0];
-        var a = _providerService.GetImages(Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory), pagination);
+        var a = _providerService.GetImages(currentPath, pagination);
         await foreach (var e in Resize(a))
             source.Add(e);
         ioPos = lastRowHeight;
         pagination.Skip += pagination.Take;
+        load = true;
         StateHasChanged();
     }
 
@@ -175,6 +196,7 @@
     private async Task ChangeDirectory(ChangeEventArgs e)
     {
         currentDirectory = e.Value?.ToString();
+        currentPath = Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory);
         await Reload();
     }
 
@@ -194,6 +216,17 @@
         layout = new int[columnCount];
         source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
         StateHasChanged();
+    }
+
+    private async Task OpenAdditionalPath()
+    {
+        var folder = await FolderPicker.PickAsync(default);
+        if (folder.IsSuccessful)
+        {
+            currentDirectory = "";
+            currentPath = folder.Folder.Path;
+            await Reload(); 
+        }
     }
 
     public class WindowDimensions
