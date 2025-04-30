@@ -3,14 +3,15 @@
 @using Microsoft.Extensions.Options
 @using pin.Infrastructure;
 @using pin.Infrastructure.Models.Settings
-@inject IOptions<Settings> writableConfig
+@inject IWritableOptions<Settings> writableConfig
 @inject NavigationManager Navigation
 <div @onclick="CloseCallback" class="settings-container">
     <div @onclick:stopPropagation="true" class="settings-page">
         <p>Home directory: @Settings.DirectorySetting.HomeDirectory</p>
-        <SelectHomeDirectory OnClickCallback="(e)=>Settings.DirectorySetting.HomeDirectory = e" />
+        <SelectHomeDirectory OnClickCallback="(e)=>HomeDirectoryUpdate(e)" />
         <span>Start directory:  </span>
-        <select class="stat" @bind=Settings.DirectorySetting.HomeSubdirectory>
+        <select class="stat" @bind=Settings.DirectorySetting.HomeSubdirectory @bind:after=SubDirectoryUpdate>
+            <option value=""></option>
             @foreach (var d in directories)
             {
                 <option value="@d"> @d </option>
@@ -18,7 +19,7 @@
 
         </select>
         <div>
-            <InputRadioGroup @bind-Value="Settings.SideBarToLeft" @onchange=StateHasChanged>
+            <InputRadioGroup ValueChanged=SideBarToLeftUpdate TValue="bool" ValueExpression="()=>Settings.SideBarToLeft" Value="Settings.SideBarToLeft">
                     <InputRadio Value="true"/> <label>left</label>
                     <InputRadio Value="false"/> <label>right </label>
             </InputRadioGroup>
@@ -34,6 +35,9 @@
     [Parameter]
     [Required]
     public EventCallback CloseCallback{ get; set; }
+    [Parameter]
+    [Required]
+    public EventCallback UpdateCallback { get; set; }
     private IEnumerable<String> directories { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -44,8 +48,30 @@
         await base.OnInitializedAsync();
     }
 
-    private void Save()
+    private void HomeDirectoryUpdate(string v)
     {
-        writableConfig.Value.SideBarToLeft = Settings.SideBarToLeft;
+        Settings.DirectorySetting.HomeDirectory = v;
+        writableConfig.Update(e =>
+        {
+            e.DirectorySetting.HomeDirectory = Settings.DirectorySetting.HomeDirectory;
+        });
+    }
+
+    private void SubDirectoryUpdate()
+    {
+        writableConfig.Update(e =>
+        {
+            e.DirectorySetting.HomeSubdirectory = Settings.DirectorySetting.HomeSubdirectory;
+        });
+    }
+
+    private async Task SideBarToLeftUpdate(bool v)
+    {
+        Settings.SideBarToLeft = v;
+        await UpdateCallback.InvokeAsync();
+        writableConfig.Update(e =>
+        {
+            e.SideBarToLeft =v;
+        });
     }
 }
