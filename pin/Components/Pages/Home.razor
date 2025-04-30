@@ -7,7 +7,11 @@
 @inject NavigationManager Navigation
 @if (directorySettings is null || directorySettings.HomeDirectory is null)
 {
-    <SelectHomeDirectory OnClickCallback="Load" />
+    <div class="home-container">
+        <div class="home-button">
+            <SelectHomeDirectory OnClickCallback="Load"  />
+        </div>
+    </div>
 }
 
 @code {
@@ -27,8 +31,9 @@
     {
         directorySettings.HomeDirectory = path;
         writableConfig.Update(e => { 
-            e.DirectorySetting.HomeDirectory = directorySettings.HomeDirectory;
-            e.DirectorySetting.HomeSubdirectory = directorySettings.HomeSubdirectory;
+            e.DirectorySetting.HomeDirectory = path;
         });
+        Thread.Sleep(500);
+        Navigation.NavigateTo(nameof(Images));
     }
 }

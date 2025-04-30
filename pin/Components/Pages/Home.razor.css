@@ -1,0 +1,9 @@
+﻿.home-container{
+    height:100%;
+    width:100%;
+}
+.home-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
