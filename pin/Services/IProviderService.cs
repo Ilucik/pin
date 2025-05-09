@@ -6,6 +6,6 @@ namespace pin.Services
     public interface IProviderService
     {
         IAsyncEnumerable<PinImage> GetAllImages(string path);
-        IAsyncEnumerable<PinImage> GetImages(string path, Pagination pag);
+        Task<IEnumerable<PinImage>> GetImages(string path, Pagination pag);
     }
 }

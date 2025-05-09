@@ -136,18 +136,19 @@
         await Reload();
     }
 
-    private async IAsyncEnumerable<PinImage> Resize(IAsyncEnumerable<PinImage> images)
+    private IEnumerable<PinImage> Resize(IEnumerable<PinImage> images)
     {
         maxWidth = (ws.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
-        await foreach (var image in images)
+        foreach (var image in images)
         {
             var targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);            
             var pl = layout.IndexOfMin();
             image.Left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
             image.Top = Convert.ToInt32(layout[pl]);
             layout[pl] += targetHeight + verticalItemMargin;
-            yield return image;
         }
+
+        return images;
     }
 
     private async Task Reload()
@@ -158,8 +159,8 @@
         stopWatch.Restart();
         layout = new int[columnCount];
         pagination = new(0, 20);
-        var a = _providerService.GetImages(currentPath, pagination);
-        source = await Resize(a).ToListAsync();
+        var a = await _providerService.GetImages(currentPath, pagination);
+        source = Resize(a).ToList();
         ioPos = 0;
         pagination.Skip += pagination.Take;
         load = true;
@@ -171,9 +172,8 @@
     {
         load = false;
         var lastRowHeight = layout[0];
-        var a = _providerService.GetImages(currentPath, pagination);
-        await foreach (var e in Resize(a))
-            source.Add(e);
+        var a = await _providerService.GetImages(currentPath, pagination);
+        source.AddRange(Resize(a));
         ioPos = lastRowHeight;
         pagination.Skip += pagination.Take;
         load = true;
@@ -204,7 +204,7 @@
         if (columnCount < columnMax)
             columnCount++;
         layout = new int[columnCount];
-        source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
+        source =  Resize(source).ToList();
         StateHasChanged();
     }
 
@@ -213,7 +213,7 @@
         if (columnCount > columnMin)
             columnCount--;
         layout = new int[columnCount];
-        source = await Resize(source.ToAsyncEnumerable()).ToListAsync();
+        source = Resize(source).ToList();
         StateHasChanged();
     }
 

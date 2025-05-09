@@ -1,6 +1,8 @@
 ﻿using Microsoft.Maui.Graphics.Platform;
 using pin.Infrastructure;
 using pin.Infrastructure.Models;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace pin.Services
@@ -8,7 +10,7 @@ namespace pin.Services
     public class ProviderService : IProviderService
     {
         private readonly string extensionsRegex = $"^.+\\.jpg|jpeg|png|gif|webp$";
-        public async IAsyncEnumerable<PinImage> GetImages(string path, Pagination pag)
+        public Task<IEnumerable<PinImage>> GetImages(string path, Pagination pag)
         {
             var files = Directory
                 .EnumerateFiles(path)
@@ -16,13 +18,9 @@ namespace pin.Services
                 .Skip(pag.Skip)
                 .Take(pag.Take);
             if (!files.Any())
-            {
                 pag.isEnded = true;
-                yield break;
-            }
 
-            foreach(var e in await RunWorkersAsync(files, StringToPinImage, 10).ConfigureAwait(false))
-            yield return e;
+            return RunWorkersAsync(files, StringToPinImage, Environment.ProcessorCount/2);
         }
 
         private async Task<PinImage> StringToPinImage(string str)
@@ -42,7 +40,7 @@ namespace pin.Services
             return new PinImage(imageSource, width, height);
         }
 
-        public async Task<Tout[]> RunWorkersAsync<Tin, Tout>(IEnumerable<Tin> items, Func<Tin, Task<Tout>> func, int degree)
+        private async Task<IEnumerable<Tout>> RunWorkersAsync<Tin, Tout>(IEnumerable<Tin> items, Func<Tin, Task<Tout>> func, int degree)
         {
             List<Task<Tout>> tasks = new();
             using (var source = items.GetEnumerator())
@@ -71,7 +69,7 @@ namespace pin.Services
                 }
                 await Task.WhenAll(jobs);
             }
-            return tasks.Select(t => t.Result).ToArray();
+            return tasks.Select(t => t.Result);
         }
 
         public async IAsyncEnumerable<PinImage> GetAllImages(string path)
