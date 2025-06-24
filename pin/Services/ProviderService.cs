@@ -12,11 +12,13 @@ namespace pin.Services
         private readonly string extensionsRegex = $"^.+\\.jpg|jpeg|png|gif|webp$";
         public Task<IEnumerable<PinImage>> GetImages(string path, Pagination pag)
         {
-            var files = Directory
-                .EnumerateFiles(path)
-                .Where(file => Regex.IsMatch(file, extensionsRegex, RegexOptions.IgnoreCase))
+            var files = new DirectoryInfo(path)
+                .EnumerateFiles()
+                .Where(f => Regex.IsMatch(f.Name, extensionsRegex, RegexOptions.IgnoreCase))
+                .OrderByDescending(f=>f.CreationTime)
                 .Skip(pag.Skip)
-                .Take(pag.Take);
+                .Take(pag.Take)
+                .Select(f=>f.FullName);
             if (!files.Any())
                 pag.isEnded = true;
 

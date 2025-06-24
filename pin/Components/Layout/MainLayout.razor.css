@@ -74,3 +74,9 @@ main {
 
     
 }
+
+*:not(input) {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+}
