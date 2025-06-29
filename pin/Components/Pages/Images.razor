@@ -27,7 +27,7 @@
     {
         <SettingsPage CloseCallback="ShowSettings" UpdateCallback="StateChanged" Settings="@settings"></SettingsPage>
     }
-    <div class="content-main" style=@(settings.SideBarToLeft?"padding-left:60px;padding-right:25px;":"padding-left:10px;padding-right:75px;")>
+    <div class="content-main" style=@(settings.SideBarToLeft?"padding-left:60px;padding-right:5px;":"padding-left:5px;padding-right:60px;")>
         <div class="content-tooltip">
             <span>
                 @if(directories is not null){
@@ -50,8 +50,13 @@
                 }
             </span>    
             <span class="columns-count">
-                <button class="stat" @onclick="ColumnNuberIncrease" title="add column">+</button>
-                <button class="stat" @onclick="ColumnNumberDecrease" title="remove count">-</button>
+                <select class="stat" @bind=columnCount @bind:after=InitLoad>
+                    @for(var i = 1; i < 8; i++)
+                    {
+                        <option value="@i"> @i </option>
+                    }
+
+                </select>
             </span>
         </div>
 
@@ -65,7 +70,7 @@
                 @for (var i = 0; i < source.Count; i++)
                 {
                     var ci = i;
-                    <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{maxWidth}px"); top:@($"{source[ci].Top}px");left:@($"{source[ci].Left}px")">
+                    <div @onclick="()=>ShowModal(ci)" class="item-img" style="width: @($"{source[ci].Width}px"); top:@($"{source[ci].Top}px");left:@($"{source[ci].Left}px")">
                         <img src="data:image/png;base64, @source[ci].Src64" width="100%" />
                         <div class="item">
                         </div>
@@ -102,14 +107,14 @@
     private bool modalVisible;
     private bool settingsVisible;
     private Stopwatch stopWatch = new();
-    private int columnCount = 5;
     private WindowDimensions ws;
     private int ioPos = 0;
     private int maxWidth;
     private int verticalItemMargin = 10;
     private int horizontalItemMargin = 20;
-    private int columnMin = 3;
-    private int columnMax = 6;
+    private int columnCount = 5;
+    private int columnMin = 1;
+    private int columnMax = 7;
     private int[] layout;
     private Pagination pagination = new(0, 20);
 
@@ -138,12 +143,37 @@
 
     private IEnumerable<PinImage> Resize(IEnumerable<PinImage> images)
     {
-        maxWidth = (ws.Width - horizontalItemMargin * (columnCount - 1)) / columnCount;
+        if (columnCount == 1)
+            Resize1Column(images);
+        else
+            ResizeMore(images);
+        return images;
+    }
+
+    private IEnumerable<PinImage> ResizeMore(IEnumerable<PinImage> images)
+    {
+        maxWidth = (ws.Width - 15 - horizontalItemMargin * (columnCount - 1)) / columnCount;
         foreach (var image in images)
         {
-            var targetHeight = Convert.ToInt32(image.Height * maxWidth / image.Width);            
+            image.Width = maxWidth;
+            var targetHeight = Convert.ToInt32(image.SourceHeight * maxWidth / image.SourceWidth);            
             var pl = layout.IndexOfMin();
             image.Left = Convert.ToInt32((maxWidth + horizontalItemMargin) * pl);
+            image.Top = Convert.ToInt32(layout[pl]);
+            layout[pl] += targetHeight + verticalItemMargin;
+        }
+
+        return images;
+    }
+
+    private IEnumerable<PinImage> Resize1Column(IEnumerable<PinImage> images)
+    {
+        foreach (var image in images)
+        {
+            image.Width = Convert.ToInt32(ws.Width * 0.6);
+            var targetHeight = Convert.ToInt32(image.SourceHeight * image.Width / image.SourceWidth);
+            var pl = layout.IndexOfMin();
+            image.Left = Convert.ToInt32(ws.Width * 0.2);
             image.Top = Convert.ToInt32(layout[pl]);
             layout[pl] += targetHeight + verticalItemMargin;
         }
@@ -161,7 +191,7 @@
         pagination = new(0, 20);
         var a = await _providerService.GetImages(currentPath, pagination);
         source = Resize(a).ToList();
-        ioPos = 0;
+        ioPos = layout[0];
         pagination.Skip += pagination.Take;
         load = true;
         stopWatch.Stop();
@@ -174,7 +204,7 @@
         var lastRowHeight = layout[0];
         var a = await _providerService.GetImages(currentPath, pagination);
         source.AddRange(Resize(a));
-        ioPos = lastRowHeight;
+        ioPos = (layout[0] - lastRowHeight) / 2 + lastRowHeight;
         pagination.Skip += pagination.Take;
         load = true;
         StateHasChanged();
@@ -199,21 +229,11 @@
         await Reload();
     }
 
-    private async Task ColumnNuberIncrease()
+    private async Task ColumnNuberChange()
     {
-        if (columnCount < columnMax)
-            columnCount++;
         layout = new int[columnCount];
         source =  Resize(source).ToList();
-        StateHasChanged();
-    }
-
-    private async Task ColumnNumberDecrease()
-    {
-        if (columnCount > columnMin)
-            columnCount--;
-        layout = new int[columnCount];
-        source = Resize(source).ToList();
+        ioPos = layout[0];
         StateHasChanged();
     }
 
