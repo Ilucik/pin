@@ -11,14 +11,10 @@ namespace pin.Infrastructure
     public class WritableOptions<T> : IWritableOptions<T> where T : class, new()
     {
         private readonly IOptionsMonitor<T> _options;
-        private readonly IConfigurationRoot _configuration;
 
-        public WritableOptions(
-            IOptionsMonitor<T> options,
-            IConfigurationRoot configuration)
+        public WritableOptions(IOptionsMonitor<T> options)
         {
             _options = options;
-            _configuration = configuration;
         }
 
         public T Value => _options.CurrentValue;
@@ -36,7 +32,6 @@ namespace pin.Infrastructure
 
             jObject[sectionName] = JObject.Parse(JsonConvert.SerializeObject(sectionObject));
             File.WriteAllText(fileProvider, JsonConvert.SerializeObject(jObject, Newtonsoft.Json.Formatting.Indented));
-            _configuration.Reload();
         }
     }
 }

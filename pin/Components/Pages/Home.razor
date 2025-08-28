@@ -2,10 +2,9 @@
 @using Microsoft.Extensions.Configuration
 @using pin.Infrastructure;
 @using pin.Infrastructure.Models.Settings
-@inject IConfiguration config
-@inject IWritableOptions<Settings> writableConfig
+@inject IWritableOptions<Settings> options
 @inject NavigationManager Navigation
-@if (directorySettings is null || directorySettings.HomeDirectory is null)
+@if (settings is null || settings.HomeDirectory is null)
 {
     <div class="home-container">
         <div class="home-button">
@@ -15,25 +14,25 @@
 }
 
 @code {
-    private DirectorySetting directorySettings;
+    private Settings settings;
 
     protected override async Task OnInitializedAsync()
     {
-        var settings = config.GetSection(nameof(Settings)).Get<Settings>();
-        directorySettings = settings.DirectorySetting;
-        if (directorySettings is not null && directorySettings.HomeDirectory is not null)
-            Navigation.NavigateTo(nameof(Images));
+        var settings = options.Value;
+        this.settings = settings;
+        if (this.settings is not null && this.settings.HomeDirectory is not null)
+                Navigation.NavigateTo(nameof(Pages.Images));
 
         await base.OnInitializedAsync();
     }
 
     private void Load(string path)
     {
-        directorySettings.HomeDirectory = path;
-        writableConfig.Update(e => { 
-            e.DirectorySetting.HomeDirectory = path;
+        settings.HomeDirectory = path;
+        options.Update(e =>
+        {
+            e.HomeDirectory = path;
         });
-        Thread.Sleep(500);
         Navigation.NavigateTo(nameof(Images));
     }
 }

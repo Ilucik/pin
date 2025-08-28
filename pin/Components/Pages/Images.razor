@@ -10,8 +10,8 @@
 @using pin.Infrastructure.Models
 @using pin.Services
 @using pin.Infrastructure.Models.Settings
-@inject IConfiguration config
 @inject IJSRuntime _jsRuntime
+@inject IWritableOptions<Settings> options
 @inject IProviderService _providerService
 @if (settings is not null){
     <div class="help-bar" style=@(settings.SideBarToLeft?"left:0px;border-right: 1px solid #e9e9e9;":"right:0px;border-left: 1px solid #e9e9e9;")>
@@ -120,9 +120,9 @@
 
     protected override async Task OnInitializedAsync()
     {     
-        settings = config.GetSection(nameof(Settings)).Get<Settings>();
-        currentDirectory = settings.DirectorySetting.HomeSubdirectory;
-        directories = (new DirectoryInfo(settings.DirectorySetting.HomeDirectory))
+        settings = options.Value;
+        currentDirectory = settings.HomeSubdirectory;
+        directories = (new DirectoryInfo(settings.HomeDirectory))
             .GetDirectories()
             .Select(e => e.Name);
         if (jsModule is null)
@@ -137,7 +137,7 @@
 
     private async Task InitLoad()
     {
-        currentPath = Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory);
+        currentPath = Path.Combine(settings.HomeDirectory, currentDirectory);
         await Reload();
     }
 
@@ -225,7 +225,7 @@
     private async Task ChangeDirectory(ChangeEventArgs e)
     {
         currentDirectory = e.Value?.ToString();
-        currentPath = Path.Combine(settings.DirectorySetting.HomeDirectory, currentDirectory);
+        currentPath = Path.Combine(settings.HomeDirectory, currentDirectory);
         await Reload();
     }
 

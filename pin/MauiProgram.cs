@@ -56,7 +56,7 @@ namespace pin
                 //.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .Build();
             builder.Configuration.AddConfiguration(config);
-            //builder.Services.Configure<Settings>(builder.Configuration.GetSection(nameof(Settings)));
+
             builder.Services.ConfigureWritable<Settings>();
 
             builder.Services.AddMauiBlazorWebView();

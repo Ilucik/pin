@@ -3,14 +3,14 @@
 @using Microsoft.Extensions.Options
 @using pin.Infrastructure;
 @using pin.Infrastructure.Models.Settings
-@inject IWritableOptions<Settings> writableConfig
+@inject IWritableOptions<Settings> options
 @inject NavigationManager Navigation
 <div @onclick="CloseCallback" class="settings-container">
     <div @onclick:stopPropagation="true" class="settings-page">
-        <p>Home directory: @Settings.DirectorySetting.HomeDirectory</p>
+        <p>Home directory: @Settings.HomeDirectory</p>
         <SelectHomeDirectory OnClickCallback="(e)=>HomeDirectoryUpdate(e)" />
         <span>Start directory:  </span>
-        <select class="stat" @bind=Settings.DirectorySetting.HomeSubdirectory @bind:after=SubDirectoryUpdate>
+        <select class="stat" @bind=Settings.HomeSubdirectory @bind:after=SubDirectoryUpdate>
             <option value=""></option>
             @foreach (var d in directories)
             {
@@ -42,7 +42,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        directories = (new DirectoryInfo(Settings.DirectorySetting.HomeDirectory))
+        directories = (new DirectoryInfo(Settings.HomeDirectory))
            .GetDirectories()
            .Select(e => e.Name);
         await base.OnInitializedAsync();
@@ -50,18 +50,18 @@
 
     private void HomeDirectoryUpdate(string v)
     {
-        Settings.DirectorySetting.HomeDirectory = v;
-        writableConfig.Update(e =>
+        Settings.HomeDirectory = v;
+        options.Update(e =>
         {
-            e.DirectorySetting.HomeDirectory = Settings.DirectorySetting.HomeDirectory;
+            e.HomeDirectory = Settings.HomeDirectory;
         });
     }
 
     private void SubDirectoryUpdate()
     {
-        writableConfig.Update(e =>
+        options.Update(e =>
         {
-            e.DirectorySetting.HomeSubdirectory = Settings.DirectorySetting.HomeSubdirectory;
+            e.HomeSubdirectory = Settings.HomeSubdirectory;
         });
     }
 
@@ -69,7 +69,7 @@
     {
         Settings.SideBarToLeft = v;
         await UpdateCallback.InvokeAsync();
-        writableConfig.Update(e =>
+        options.Update(e =>
         {
             e.SideBarToLeft =v;
         });
