@@ -33,6 +33,7 @@ jobs:
     - name: Publish
       run: dotnet publish pin/pin.csproj -c Release -f:net8.0-windows10.0.19041.0 --self-contained /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=true /p:PackageCertificatethumbprint="${{  secrets.PFX_THUMBPRINT  }}"
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v4.6.2
+      uses: actions/upload-artifact@v7
       with:
         path: .\**\AppPackages\**\*.*
+        compression-level: 9
