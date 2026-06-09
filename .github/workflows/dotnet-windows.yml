@@ -23,7 +23,7 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Install MAUI workload
-      run: dotnet workload install maui
+      run: dotnet workload install maui-windows --sdk-version=9.0.300
     - name: Decrypt PFX file
       run: |
         echo "${{ secrets.PFX_FILE }}" >cert.pfx.asc
