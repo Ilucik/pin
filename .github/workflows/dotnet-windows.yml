@@ -6,8 +6,7 @@ name: .NET Windows
 on:
   push:
     branches:
-      - master
-      - dev
+      - "*"
   pull_request:
     branches: [ "master" ]
 
@@ -21,9 +20,9 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
     - name: Install MAUI workload
-      run: dotnet workload install maui-windows@8.0.300
+      run: dotnet workload install maui-windows@9.0.300
     - name: Decrypt PFX file
       run: |
         echo "${{ secrets.PFX_FILE }}" >cert.pfx.asc
@@ -31,9 +30,9 @@ jobs:
     - name: Add Cert to Store
       run: certutil -user -q -p ${{  secrets.PFX_PASS }} -importpfx cert.pfx NoRoot
     - name: Publish
-      run: dotnet publish pin/pin.csproj -c Release -f:net8.0-windows10.0.19041.0 --self-contained /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=true /p:PackageCertificatethumbprint="${{  secrets.PFX_THUMBPRINT  }}"
+      run: dotnet publish pin/pin.csproj -c Release -f:net9.0-windows10.0.19041.0 --self-contained /p:GenerateAppxPackageOnBuild=true /p:AppxPackageSigningEnabled=true /p:PackageCertificatethumbprint="${{  secrets.PFX_THUMBPRINT  }}"
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v7
       with:
         path: .\**\AppPackages\**\*.*
-        compression-level: 9
+        compression-level: 0
