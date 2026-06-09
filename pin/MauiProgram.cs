@@ -63,8 +63,10 @@ namespace pin
 
             ConfigureServices(builder.Services);
 
+#if DEBUG
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
+#endif
 
             return builder.Build();
         }
